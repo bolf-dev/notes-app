@@ -8,6 +8,12 @@ framework:
     #esi: true
     #fragments: true
 
+    # Maps domain exceptions to HTTP responses, so the domain layer stays HTTP-agnostic
+    exceptions:
+        App\Exception\NoteNotFoundException:
+            status_code: 404
+            log_level: info
+
 when@test:
     framework:
         test: true

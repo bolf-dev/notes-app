@@ -8,6 +8,7 @@ use App\Dto\Request\CreateNoteRequest;
 use App\Dto\Request\ListNotesQuery;
 use App\Entity\Note;
 use App\Enum\Priority;
+use App\Exception\NoteNotFoundException;
 use App\Repository\NoteRepository;
 
 final readonly class NoteService
@@ -27,6 +28,14 @@ final readonly class NoteService
         $priority = null !== $query->priority ? Priority::fromLabel($query->priority) : null;
 
         return $this->noteRepository->findByPriority($priority);
+    }
+
+    /**
+     * @throws NoteNotFoundException
+     */
+    public function get(int $id): Note
+    {
+        return $this->noteRepository->find($id) ?? throw NoteNotFoundException::withId($id);
     }
 
     /**
