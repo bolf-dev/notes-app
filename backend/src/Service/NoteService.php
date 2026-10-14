@@ -6,6 +6,7 @@ namespace App\Service;
 
 use App\Dto\Request\CreateNoteRequest;
 use App\Dto\Request\ListNotesQuery;
+use App\Dto\Request\UpdateNoteRequest;
 use App\Entity\Note;
 use App\Enum\Priority;
 use App\Exception\NoteNotFoundException;
@@ -48,6 +49,32 @@ final readonly class NoteService
             content: trim($request->content),
             priority: Priority::fromLabel($request->priority),
         );
+
+        $this->noteRepository->save($note);
+
+        return $note;
+    }
+
+    /**
+     * Expects an already validated request. Fields that are null are left unchanged.
+     *
+     * @throws NoteNotFoundException
+     */
+    public function update(int $id, UpdateNoteRequest $request): Note
+    {
+        $note = $this->get($id);
+
+        if (null !== $request->title) {
+            $note->setTitle(trim($request->title));
+        }
+
+        if (null !== $request->content) {
+            $note->setContent(trim($request->content));
+        }
+
+        if (null !== $request->priority) {
+            $note->setPriority(Priority::fromLabel($request->priority));
+        }
 
         $this->noteRepository->save($note);
 
