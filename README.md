@@ -36,6 +36,11 @@ Jednoduchá aplikácia na správu poznámok – Symfony 7.4 LTS (PHP 8.4), Maria
 
 4. Aplikácia beží na [http://localhost:8080](http://localhost:8080).
 
+## Dokumentácia API
+
+Swagger UI (dá sa v ňom API aj priamo skúšať): [http://localhost:8080/api/doc](http://localhost:8080/api/doc)
+OpenAPI špecifikácia (JSON): [http://localhost:8080/api/doc.json](http://localhost:8080/api/doc.json)
+
 ## Služby
 
 | Služba | Popis                         | Port               |
@@ -43,6 +48,16 @@ Jednoduchá aplikácia na správu poznámok – Symfony 7.4 LTS (PHP 8.4), Maria
 | `web`  | Nginx                         | `8080` (`APP_PORT`) |
 | `app`  | PHP 8.4 FPM + Symfony         | –                  |
 | `db`   | MariaDB 12.3                  | `3306` (`DB_PORT`)  |
+
+## Testy
+
+```bash
+docker compose exec app composer test
+```
+Príkaz zmigruje testovaciu databázu `notes_app_test` a spustí PHPUnit. Každý test beží v transakcii, ktorá sa po ňom vráti, takže dáta v databáze nezostávajú.
+
+> **Poznámka:** testovaciu databázu vytvára init skript MariaDB len pri prvom štarte s prázdnym volume.
+> Ak máš volume z doby pred jej pridaním, vytvor ho nanovo (zmaže dáta): `docker compose down -v && docker compose up -d`
 
 ## Užitočné príkazy
 
