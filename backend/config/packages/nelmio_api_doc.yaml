@@ -1,0 +1,10 @@
+nelmio_api_doc:
+    documentation:
+        info:
+            title: Notes API
+            description: REST API for managing notes.
+            version: 1.0.0
+    areas:
+        # Document every /api route except the documentation itself
+        path_patterns:
+            - ^/api(?!/doc)
