@@ -69,5 +69,9 @@
             "require": "7.4.*",
             "docker": false
         }
+    },
+    "require-dev": {
+        "doctrine/doctrine-fixtures-bundle": "^4.3",
+        "fakerphp/faker": "^1.24"
     }
 }
