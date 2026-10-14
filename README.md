@@ -2,8 +2,6 @@
 
 Jednoduchá aplikácia na správu poznámok – Symfony 7.4 LTS (PHP 8.4), MariaDB 12.3 LTS, Vue 3.
 
-Plán vývoja: [docs/plan.md](docs/plan.md)
-
 ## Požiadavky
 - Docker s Docker Compose v2
 - voľné porty `8080` (aplikácia) a `3306` (databáza) – dajú sa zmeniť v `.env`
@@ -28,7 +26,15 @@ Plán vývoja: [docs/plan.md](docs/plan.md)
    > docker compose exec app composer install
    > ```
 
-3. Aplikácia beží na [http://localhost:8080](http://localhost:8080).
+   Databázové migrácie sa spúšťajú automaticky pri každom štarte kontajnera `app`.
+
+3. (Voliteľné) Naplň databázu testovacími dátami (20 poznámok):
+   ```bash
+   docker compose exec app bin/console doctrine:fixtures:load
+   ```
+   **Pozor:** príkaz najprv zmaže všetky existujúce poznámky.
+
+4. Aplikácia beží na [http://localhost:8080](http://localhost:8080).
 
 ## Služby
 
@@ -49,6 +55,10 @@ docker compose logs -f app
 
 # Symfony konzola
 docker compose exec app bin/console
+
+# stav migrácií / nová migrácia po zmene entity
+docker compose exec app bin/console doctrine:migrations:status
+docker compose exec app bin/console doctrine:migrations:diff
 
 # Composer
 docker compose exec app composer require <balíček>
