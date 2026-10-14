@@ -80,4 +80,12 @@ final readonly class NoteService
 
         return $note;
     }
+
+    /**
+     * @throws NoteNotFoundException
+     */
+    public function delete(int $id): void
+    {
+        $this->noteRepository->remove($this->get($id));
+    }
 }

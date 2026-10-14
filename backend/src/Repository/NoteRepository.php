@@ -43,4 +43,10 @@ class NoteRepository extends ServiceEntityRepository
         $this->getEntityManager()->persist($note);
         $this->getEntityManager()->flush();
     }
+
+    public function remove(Note $note): void
+    {
+        $this->getEntityManager()->remove($note);
+        $this->getEntityManager()->flush();
+    }
 }
