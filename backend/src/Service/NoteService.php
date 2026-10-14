@@ -1,0 +1,34 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Service;
+
+use App\Dto\Request\CreateNoteRequest;
+use App\Entity\Note;
+use App\Enum\Priority;
+use App\Repository\NoteRepository;
+
+final readonly class NoteService
+{
+    public function __construct(
+        private NoteRepository $noteRepository,
+    ) {
+    }
+
+    /**
+     * Expects an already validated request.
+     */
+    public function create(CreateNoteRequest $request): Note
+    {
+        $note = new Note(
+            title: trim($request->title),
+            content: trim($request->content),
+            priority: Priority::fromLabel($request->priority),
+        );
+
+        $this->noteRepository->save($note);
+
+        return $note;
+    }
+}
