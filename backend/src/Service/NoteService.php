@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Dto\Request\CreateNoteRequest;
+use App\Dto\Request\ListNotesQuery;
 use App\Entity\Note;
 use App\Enum\Priority;
 use App\Repository\NoteRepository;
@@ -14,6 +15,18 @@ final readonly class NoteService
     public function __construct(
         private NoteRepository $noteRepository,
     ) {
+    }
+
+    /**
+     * Expects an already validated query.
+     *
+     * @return list<Note>
+     */
+    public function list(ListNotesQuery $query): array
+    {
+        $priority = null !== $query->priority ? Priority::fromLabel($query->priority) : null;
+
+        return $this->noteRepository->findByPriority($priority);
     }
 
     /**
