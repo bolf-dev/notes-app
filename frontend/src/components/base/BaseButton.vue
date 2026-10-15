@@ -1,15 +1,27 @@
 <script setup lang="ts">
-withDefaults(defineProps<{ type?: 'button' | 'submit' }>(), { type: 'button' })
+import { RouterLink, type RouteLocationRaw } from 'vue-router'
+
+// With `to` the button navigates (renders a link), otherwise it is a regular <button>
+withDefaults(defineProps<{ to?: RouteLocationRaw; type?: 'button' | 'submit' }>(), {
+  to: undefined,
+  type: 'button',
+})
 </script>
 
 <template>
-  <button :type="type" class="base-button">
+  <RouterLink v-if="to" :to="to" class="base-button">
+    <slot />
+  </RouterLink>
+  <button v-else :type="type" class="base-button">
     <slot />
   </button>
 </template>
 
 <style scoped>
 .base-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: var(--size-tap-target);
   padding: 0 var(--space-5);
   border: none;
@@ -17,6 +29,7 @@ withDefaults(defineProps<{ type?: 'button' | 'submit' }>(), { type: 'button' })
   background: var(--color-primary);
   color: var(--color-on-primary);
   font-weight: 600;
+  text-decoration: none;
   transition: background-color 0.15s;
 }
 

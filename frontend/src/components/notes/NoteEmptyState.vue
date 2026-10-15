@@ -1,15 +1,11 @@
 <script setup lang="ts">
 import BaseButton from '@/components/base/BaseButton.vue'
-
-defineEmits<{
-  create: []
-}>()
 </script>
 
 <template>
   <div class="note-empty-state">
     <p>Select a note from the list or create a new one.</p>
-    <BaseButton @click="$emit('create')">+ New note</BaseButton>
+    <BaseButton :to="{ name: 'note-create' }">+ New note</BaseButton>
   </div>
 </template>
 

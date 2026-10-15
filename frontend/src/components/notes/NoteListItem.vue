@@ -1,25 +1,22 @@
 <script setup lang="ts">
+import { RouterLink } from 'vue-router'
+
 import type { Note } from '@/types/note'
 import { formatDate } from '@/utils/formatDate'
 import NotePriorityBadge from './NotePriorityBadge.vue'
 
 defineProps<{
   note: Note
-  selected: boolean
-}>()
-
-defineEmits<{
-  select: []
 }>()
 </script>
 
 <template>
-  <button
-    type="button"
+  <!-- The link to the open note gets the "selected" class and aria-current="page" from the router -->
+  <RouterLink
+    :to="{ name: 'note-edit', params: { id: note.id } }"
     class="note-list-item"
-    :class="[`note-list-item--${note.priority}`, { 'note-list-item--selected': selected }]"
-    :aria-current="selected || undefined"
-    @click="$emit('select')"
+    :class="`note-list-item--${note.priority}`"
+    exact-active-class="note-list-item--selected"
   >
     <span class="note-list-item__title">{{ note.title }}</span>
     <span class="note-list-item__excerpt">{{ note.content }}</span>
@@ -27,7 +24,7 @@ defineEmits<{
       <NotePriorityBadge :priority="note.priority" />
       {{ formatDate(note.updatedAt) }}
     </span>
-  </button>
+  </RouterLink>
 </template>
 
 <style scoped>
@@ -41,7 +38,8 @@ defineEmits<{
   border: 1px solid var(--color-border);
   border-radius: var(--radius-base);
   background: var(--color-surface);
-  text-align: left;
+  color: inherit;
+  text-decoration: none;
   overflow: hidden;
   transition: border-color 0.15s;
 }

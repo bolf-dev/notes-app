@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, nextTick, useTemplateRef, watch } from 'vue'
+import { RouterView, useRoute } from 'vue-router'
 
 import BaseButton from '@/components/base/BaseButton.vue'
-import NoteEmptyState from '@/components/notes/NoteEmptyState.vue'
 import NoteList from '@/components/notes/NoteList.vue'
 import NoteListEmpty from '@/components/notes/NoteListEmpty.vue'
 import NoteListEmptyFilter from '@/components/notes/NoteListEmptyFilter.vue'
@@ -16,20 +16,33 @@ const { notes, priority, isLoading, hasLoaded, hasError, load } = useNotes()
 // Start loading right away (not in onMounted), so the first render already shows the loading state
 load()
 
-const selectedNoteId = ref<number | null>(null)
+// On mobile only one panel is visible: the list on "/", the detail when a note is open or being created
+const route = useRoute()
+const isDetailOpen = computed(() => route.name === 'note-create' || route.name === 'note-edit')
 
-function startCreate(): void {
-  // Switches the detail panel to the create form (step 5)
-  selectedNoteId.value = null
-}
+// A hidden panel loses its scroll position – remember it, so "Back" returns to the same place in the list
+const listPanel = useTemplateRef<HTMLElement>('listPanel')
+let listScrollTop = 0
+
+watch(isDetailOpen, async (isOpen) => {
+  if (!listPanel.value) {
+    return
+  }
+  if (isOpen) {
+    listScrollTop = listPanel.value.scrollTop
+  } else {
+    await nextTick()
+    listPanel.value.scrollTop = listScrollTop
+  }
+})
 </script>
 
 <template>
-  <div class="layout">
-    <aside class="panel panel--list">
+  <div class="layout" :class="{ 'layout--detail-open': isDetailOpen }">
+    <aside ref="listPanel" class="panel panel--list">
       <header class="list-header">
         <h1 class="list-header__title">Notes</h1>
-        <BaseButton @click="startCreate">+ New note</BaseButton>
+        <BaseButton :to="{ name: 'note-create' }">+ New note</BaseButton>
       </header>
 
       <NotePriorityFilter v-model="priority" class="list-filter" />
@@ -43,18 +56,13 @@ function startCreate(): void {
           :priority="priority"
           @clear="priority = null"
         />
-        <NoteListEmpty v-else-if="notes.length === 0" @create="startCreate" />
-        <NoteList
-          v-else
-          :notes="notes"
-          :selected-id="selectedNoteId"
-          @select="selectedNoteId = $event"
-        />
+        <NoteListEmpty v-else-if="notes.length === 0" />
+        <NoteList v-else :notes="notes" />
       </div>
     </aside>
 
     <main class="panel panel--detail">
-      <NoteEmptyState @create="startCreate" />
+      <RouterView />
     </main>
   </div>
 </template>
@@ -65,6 +73,8 @@ function startCreate(): void {
   height: 100%;
   display: grid;
   grid-template-columns: 1fr;
+  /* Row fills the viewport height, so the panels scroll inside instead of the whole page */
+  grid-template-rows: minmax(0, 1fr);
 }
 
 .panel {
@@ -72,8 +82,13 @@ function startCreate(): void {
   overflow-y: auto;
 }
 
-.panel--detail {
+.panel--detail,
+.layout--detail-open .panel--list {
   display: none;
+}
+
+.layout--detail-open .panel--detail {
+  display: block;
 }
 
 @media (min-width: 768px) {
@@ -87,7 +102,10 @@ function startCreate(): void {
     border-radius: var(--radius-base);
   }
 
-  .panel--detail {
+  /* Desktop: both panels are always visible */
+  .panel--list,
+  .panel--detail,
+  .layout--detail-open .panel--list {
     display: block;
   }
 }
