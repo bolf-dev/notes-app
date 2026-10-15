@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { toast } from 'vue-sonner'
 
 import { getValidationErrors, type FieldErrors } from '@/api/errors'
 import { createNote } from '@/api/notes'
@@ -24,6 +25,7 @@ async function handleSubmit(payload: NotePayload): Promise<void> {
   try {
     const note = await createNote(payload)
     reloadNotes()
+    toast.success('Note created')
     // The new note opens in edit mode
     await router.push({ name: 'note-edit', params: { id: note.id } })
   } catch (error) {

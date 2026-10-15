@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, useTemplateRef, watch } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
+import { Toaster } from 'vue-sonner'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import NoteList from '@/components/notes/NoteList.vue'
@@ -65,6 +66,9 @@ watch(isDetailOpen, async (isOpen) => {
       <RouterView />
     </main>
   </div>
+
+  <!-- Short confirmations after actions, triggered anywhere via toast.success(...) -->
+  <Toaster position="bottom-right" rich-colors :duration="3000" />
 </template>
 
 <style scoped>

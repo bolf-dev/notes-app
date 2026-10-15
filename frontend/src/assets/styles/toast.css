@@ -1,0 +1,13 @@
+/* vue-sonner theme – maps the library's CSS variables to our design tokens */
+[data-sonner-toaster][data-sonner-theme='light'] {
+  font-family: var(--font-family);
+  --border-radius: var(--radius-base);
+
+  --success-bg: var(--color-primary-lighter);
+  --success-border: var(--color-primary);
+  --success-text: var(--color-primary-dark);
+
+  --error-bg: var(--color-error-light);
+  --error-border: var(--color-error);
+  --error-text: var(--color-error-text);
+}
