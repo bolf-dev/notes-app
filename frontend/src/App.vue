@@ -5,18 +5,17 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import NoteEmptyState from '@/components/notes/NoteEmptyState.vue'
 import NoteList from '@/components/notes/NoteList.vue'
 import NoteListEmpty from '@/components/notes/NoteListEmpty.vue'
+import NoteListEmptyFilter from '@/components/notes/NoteListEmptyFilter.vue'
 import NoteListError from '@/components/notes/NoteListError.vue'
 import NoteListSkeleton from '@/components/notes/NoteListSkeleton.vue'
 import NotePriorityFilter from '@/components/notes/NotePriorityFilter.vue'
 import { useNotes } from '@/composables/useNotes'
-import type { Priority } from '@/types/note'
 
-const { notes, isLoading, hasError, load } = useNotes()
+const { notes, priority, isLoading, hasLoaded, hasError, load } = useNotes()
 
 // Start loading right away (not in onMounted), so the first render already shows the loading state
 load()
 
-const priorityFilter = ref<Priority | null>(null)
 const selectedNoteId = ref<number | null>(null)
 
 function startCreate(): void {
@@ -33,11 +32,17 @@ function startCreate(): void {
         <BaseButton @click="startCreate">+ New note</BaseButton>
       </header>
 
-      <NotePriorityFilter v-model="priorityFilter" class="list-filter" />
+      <NotePriorityFilter v-model="priority" class="list-filter" />
 
       <div class="list-content">
-        <NoteListSkeleton v-if="isLoading" />
+        <!-- Skeleton only on the first load; when the filter changes, the current list stays until new data arrive -->
+        <NoteListSkeleton v-if="isLoading && !hasLoaded" />
         <NoteListError v-else-if="hasError" @retry="load" />
+        <NoteListEmptyFilter
+          v-else-if="notes.length === 0 && priority !== null"
+          :priority="priority"
+          @clear="priority = null"
+        />
         <NoteListEmpty v-else-if="notes.length === 0" @create="startCreate" />
         <NoteList
           v-else
