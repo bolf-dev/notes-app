@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, reactive, useId, useTemplateRef, watch } from 'vue'
+import { nextTick, reactive, ref, useId, useTemplateRef, watch } from 'vue'
 
 import type { FieldErrors } from '@/api/errors'
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -33,22 +33,63 @@ const id = useId()
 const titleInput = useTemplateRef<HTMLInputElement>('titleInput')
 const contentInput = useTemplateRef<HTMLTextAreaElement>('contentInput')
 
-// After a failed submit move the cursor to the first invalid field (also scrolls it into view)
+// Errors shown under the fields – from the form's own check or from the server (422)
+const fieldErrors = ref<FieldErrors>({})
+
+// Server errors from the parent replace the current ones
 watch(
   () => props.errors,
-  async (errors) => {
-    await nextTick()
-    if (errors.title) {
-      titleInput.value?.focus()
-    } else if (errors.content) {
-      contentInput.value?.focus()
-    }
+  (errors) => {
+    fieldErrors.value = errors
   },
 )
+
+// Client-side check – only quick feedback, the backend stays the source of truth
+function validate(): FieldErrors {
+  const errors: FieldErrors = {}
+
+  if (!form.title.trim()) {
+    errors.title = 'Title is required.'
+  }
+  if (!form.content.trim()) {
+    errors.content = 'Content is required.'
+  }
+
+  return errors
+}
+
+function handleSubmit(): void {
+  fieldErrors.value = validate()
+
+  // Send only a valid form to the server
+  if (Object.keys(fieldErrors.value).length === 0) {
+    emit('submit', { ...form })
+  }
+}
+
+// Typing into an invalid field hides its error
+watch(
+  () => form.title,
+  () => delete fieldErrors.value.title,
+)
+watch(
+  () => form.content,
+  () => delete fieldErrors.value.content,
+)
+
+// Move the cursor to the first invalid field (also scrolls it into view) – for client and server errors
+watch(fieldErrors, async (errors) => {
+  await nextTick()
+  if (errors.title) {
+    titleInput.value?.focus()
+  } else if (errors.content) {
+    contentInput.value?.focus()
+  }
+})
 </script>
 
 <template>
-  <form class="note-form" novalidate @submit.prevent="emit('submit', { ...form })">
+  <form class="note-form" novalidate @submit.prevent="handleSubmit">
     <div class="note-form__field">
       <label :for="`${id}-title`" class="note-form__label">Title</label>
       <input
@@ -58,11 +99,11 @@ watch(
         type="text"
         maxlength="255"
         class="note-form__input"
-        :aria-invalid="!!errors.title"
-        :aria-describedby="errors.title ? `${id}-title-error` : undefined"
+        :aria-invalid="!!fieldErrors.title"
+        :aria-describedby="fieldErrors.title ? `${id}-title-error` : undefined"
       />
-      <p v-if="errors.title" :id="`${id}-title-error`" class="note-form__error">
-        {{ errors.title }}
+      <p v-if="fieldErrors.title" :id="`${id}-title-error`" class="note-form__error">
+        {{ fieldErrors.title }}
       </p>
     </div>
 
@@ -75,18 +116,18 @@ watch(
         rows="10"
         maxlength="10000"
         class="note-form__input note-form__input--textarea"
-        :aria-invalid="!!errors.content"
-        :aria-describedby="errors.content ? `${id}-content-error` : undefined"
+        :aria-invalid="!!fieldErrors.content"
+        :aria-describedby="fieldErrors.content ? `${id}-content-error` : undefined"
       />
-      <p v-if="errors.content" :id="`${id}-content-error`" class="note-form__error">
-        {{ errors.content }}
+      <p v-if="fieldErrors.content" :id="`${id}-content-error`" class="note-form__error">
+        {{ fieldErrors.content }}
       </p>
     </div>
 
     <fieldset class="note-form__field">
       <legend class="note-form__label">Priority</legend>
       <NotePrioritySelect v-model="form.priority" />
-      <p v-if="errors.priority" class="note-form__error">{{ errors.priority }}</p>
+      <p v-if="fieldErrors.priority" class="note-form__error">{{ fieldErrors.priority }}</p>
     </fieldset>
 
     <p v-if="generalError" class="note-form__general-error" role="alert">{{ generalError }}</p>
