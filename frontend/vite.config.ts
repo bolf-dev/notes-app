@@ -1,0 +1,28 @@
+import { fileURLToPath, URL } from 'node:url'
+
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import vueDevTools from 'vite-plugin-vue-devtools'
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [
+    vue(),
+    vueDevTools(),
+  ],
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
+  },
+  server: {
+    // Listen on all interfaces so the dev server is reachable from outside the container
+    host: '0.0.0.0',
+    port: 5173,
+    strictPort: true,
+    // Forward API calls to nginx (service "web") – same origin for the browser, no CORS needed
+    proxy: {
+      '/api': 'http://web:80',
+    },
+  },
+})
