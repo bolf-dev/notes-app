@@ -4,7 +4,7 @@ Jednoduchá aplikácia na správu poznámok – Symfony 7.4 LTS (PHP 8.4), Maria
 
 ## Požiadavky
 - Docker s Docker Compose v2
-- voľné porty `8080` (aplikácia) a `3306` (databáza) – dajú sa zmeniť v `.env`
+- voľné porty `5173` (frontend), `8080` (API) a `3306` (databáza) – dajú sa zmeniť v `.env`
 
 ## Spustenie
 
@@ -18,6 +18,7 @@ Jednoduchá aplikácia na správu poznámok – Symfony 7.4 LTS (PHP 8.4), Maria
    docker compose up -d --build
    ```
    Pri prvom štarte sa automaticky nainštalujú PHP závislosti (`composer install`), môže to chvíľu trvať.
+   JS závislosti frontendu (`npm install`) sa kontrolujú a inštalujú pri každom štarte kontajnera `frontend`.
    Kým inštalácia nedobehne, Nginx vracia `502 Bad Gateway` – priebeh uvidíš cez `docker compose logs -f app`.
 
    > **Poznámka:** `composer install` sa spúšťa automaticky len vtedy, keď chýba priečinok `backend/vendor/`.
@@ -34,7 +35,8 @@ Jednoduchá aplikácia na správu poznámok – Symfony 7.4 LTS (PHP 8.4), Maria
    ```
    **Pozor:** príkaz najprv zmaže všetky existujúce poznámky.
 
-4. Aplikácia beží na [http://localhost:8080](http://localhost:8080).
+4. Frontend beží na [http://localhost:5173](http://localhost:5173), API na [http://localhost:8080/api](http://localhost:8080/api).
+   Vite dev server presmerúva volania `/api/*` na Nginx, takže frontend a API sú pre prehliadač na rovnakom origine.
 
 ## Dokumentácia API
 
@@ -43,11 +45,12 @@ OpenAPI špecifikácia (JSON): [http://localhost:8080/api/doc.json](http://local
 
 ## Služby
 
-| Služba | Popis                         | Port               |
-|--------|-------------------------------|--------------------|
-| `web`  | Nginx                         | `8080` (`APP_PORT`) |
-| `app`  | PHP 8.4 FPM + Symfony         | –                  |
-| `db`   | MariaDB 12.3                  | `3306` (`DB_PORT`)  |
+| Služba     | Popis                          | Port                     |
+|------------|--------------------------------|--------------------------|
+| `frontend` | Node 24 + Vite (Vue 3)         | `5173` (`FRONTEND_PORT`) |
+| `web`      | Nginx                          | `8080` (`APP_PORT`)      |
+| `app`      | PHP 8.4 FPM + Symfony          | –                        |
+| `db`       | MariaDB 12.3                   | `3306` (`DB_PORT`)       |
 
 ## Testy
 
@@ -77,6 +80,12 @@ docker compose exec app bin/console doctrine:migrations:diff
 
 # Composer
 docker compose exec app composer require <balíček>
+
+# frontend – lint, kontrola typov, formátovanie, nový balíček
+docker compose exec frontend npm run lint
+docker compose exec frontend npm run type-check
+docker compose exec frontend npm run format
+docker compose exec frontend npm install <balíček>
 
 # pripojenie k databáze
 docker compose exec db sh -c 'mariadb -u"$MARIADB_USER" -p"$MARIADB_PASSWORD" "$MARIADB_DATABASE"'
