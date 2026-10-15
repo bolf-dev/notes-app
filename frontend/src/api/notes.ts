@@ -15,8 +15,20 @@ export async function fetchNotes(priority: Priority | null, signal?: AbortSignal
   return response.data.data
 }
 
+export async function fetchNote(id: number): Promise<Note> {
+  const response = await apiClient.get<Note>(`/notes/${id}`)
+
+  return response.data
+}
+
 export async function createNote(payload: NotePayload): Promise<Note> {
   const response = await apiClient.post<Note>('/notes', payload)
+
+  return response.data
+}
+
+export async function updateNote(id: number, payload: NotePayload): Promise<Note> {
+  const response = await apiClient.patch<Note>(`/notes/${id}`, payload)
 
   return response.data
 }

@@ -63,7 +63,8 @@ watch(isDetailOpen, async (isOpen) => {
     </aside>
 
     <main class="panel panel--detail">
-      <RouterView />
+      <!-- key: switching to another note creates a fresh view (new form state) instead of reusing the old one -->
+      <RouterView :key="route.path" />
     </main>
   </div>
 
