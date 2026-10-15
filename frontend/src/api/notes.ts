@@ -1,4 +1,4 @@
-import type { Note, Priority } from '@/types/note'
+import type { Note, NotePayload, Priority } from '@/types/note'
 import { apiClient } from './client'
 
 interface NoteListResponse {
@@ -13,4 +13,10 @@ export async function fetchNotes(priority: Priority | null, signal?: AbortSignal
   })
 
   return response.data.data
+}
+
+export async function createNote(payload: NotePayload): Promise<Note> {
+  const response = await apiClient.post<Note>('/notes', payload)
+
+  return response.data
 }

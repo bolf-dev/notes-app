@@ -9,3 +9,10 @@ export interface Note {
   createdAt: string // ISO 8601
   updatedAt: string // ISO 8601
 }
+
+// Request body for creating a note (CreateNoteRequest DTO on the backend)
+export interface NotePayload {
+  title: string
+  content: string
+  priority: Priority
+}
