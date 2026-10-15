@@ -1,0 +1,62 @@
+/* Design tokens – colors, radii, spacing and typography */
+:root {
+  /* Brand */
+  --color-primary: #3ca091;
+  --color-primary-dark: #287d6e;
+  --color-primary-lighter: #e6fafa;
+  --color-on-primary: #fff;
+
+  /* Surfaces */
+  --color-surface-page: #f4f4f4;
+  --color-surface: #fff;
+  --color-surface-muted: #f0f0f0;
+
+  /* Text */
+  --color-text: #141414;
+  --color-text-secondary: #757575;
+
+  /* Borders */
+  --color-border: #dcdcdc;
+  --color-border-hover: #bebebd;
+
+  /* Feedback */
+  --color-error: #ff5050;
+  --color-error-text: #b33838;
+  --color-error-light: #fff0f0;
+
+  /* Priority */
+  --color-priority-high: #e63c3c;
+  --color-priority-medium: #e68c14;
+  --color-priority-low: #4b78f0;
+  /* Badge text/background pairs – WCAG AA contrast (≥ 4.5:1) */
+  --color-priority-high-text: #b71c1c;
+  --color-priority-high-bg: #fdecec;
+  --color-priority-medium-text: #8a4f00;
+  --color-priority-medium-bg: #fdf1e1;
+  --color-priority-low-text: #2f55c4;
+  --color-priority-low-bg: #e3eafd;
+
+  /* Radii */
+  --radius-sm: 8px;
+  --radius-base: 12px;
+  --radius-xl: 20px;
+  --radius-pill: 999px;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  /* Typography */
+  --font-family: 'DM Sans', system-ui, sans-serif;
+  --font-size-sm: 13px;
+  --font-size-base: 15px;
+  --font-size-lg: 18px;
+  --font-size-xl: 22px;
+
+  /* Sizes */
+  --size-tap-target: 44px;
+}
