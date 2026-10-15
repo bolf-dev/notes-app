@@ -1,81 +1,122 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
+import { RouterView, useRoute, useRouter } from 'vue-router'
+import { Toaster, toast } from 'vue-sonner'
 
 import BaseButton from '@/components/base/BaseButton.vue'
-import NoteEmptyState from '@/components/notes/NoteEmptyState.vue'
+import BaseConfirmDialog from '@/components/base/BaseConfirmDialog.vue'
 import NoteList from '@/components/notes/NoteList.vue'
+import NoteListEmpty from '@/components/notes/NoteListEmpty.vue'
+import NoteListEmptyFilter from '@/components/notes/NoteListEmptyFilter.vue'
+import NoteListError from '@/components/notes/NoteListError.vue'
+import NoteListSkeleton from '@/components/notes/NoteListSkeleton.vue'
 import NotePriorityFilter from '@/components/notes/NotePriorityFilter.vue'
-import type { Note, Priority } from '@/types/note'
+import { useNotes } from '@/composables/useNotes'
+import type { Note } from '@/types/note'
 
-// Static placeholder data – replaced by API data in step 2
-const notes: Note[] = [
-  {
-    id: 4,
-    title: 'Call patient about elevated potassium',
-    content:
-      'Lab result from this morning: K+ 6.1 mmol/l. Call the patient today, arrange a repeat test tomorrow at 7:30 and review the ACE inhibitor dose.',
-    priority: 'high',
-    createdAt: '2026-10-14T15:42:00+02:00',
-    updatedAt: '2026-10-14T15:42:00+02:00',
-  },
-  {
-    id: 3,
-    title: 'Reply to online consultations',
-    content:
-      'Three unanswered patient questions in the online consultation inbox – rash after antibiotics, sick leave extension, vaccination schedule. Reply by end of day.',
-    priority: 'medium',
-    createdAt: '2026-10-13T08:05:00+02:00',
-    updatedAt: '2026-10-13T09:10:00+02:00',
-  },
-  {
-    id: 2,
-    title: 'Renew chronic prescriptions before holidays',
-    content: 'Check e-prescriptions for diabetic patients that expire in December.',
-    priority: 'medium',
-    createdAt: '2026-10-12T11:20:00+02:00',
-    updatedAt: '2026-10-12T11:20:00+02:00',
-  },
-  {
-    id: 1,
-    title: 'Update office hours in the online booking profile',
-    content: 'Add the new Friday afternoon slots for online booking.',
-    priority: 'low',
-    createdAt: '2026-10-10T18:03:00+02:00',
-    updatedAt: '2026-10-10T18:03:00+02:00',
-  },
-]
+const { notes, priority, isLoading, hasLoaded, hasError, load, remove } = useNotes()
 
-const priorityFilter = ref<Priority | null>(null)
-const selectedNoteId = ref<number | null>(null)
+// Start loading right away (not in onMounted), so the first render already shows the loading state
+load()
 
-function startCreate(): void {
-  // Switches the detail panel to the create form (step 5)
-  selectedNoteId.value = null
+// On mobile only one panel is visible: the list on "/", the detail when a note is open or being created
+const route = useRoute()
+const isDetailOpen = computed(() => route.name === 'note-create' || route.name === 'note-edit')
+
+// A hidden panel loses its scroll position – remember it, so "Back" returns to the same place in the list
+const listPanel = useTemplateRef<HTMLElement>('listPanel')
+let listScrollTop = 0
+
+watch(isDetailOpen, async (isOpen) => {
+  if (!listPanel.value) {
+    return
+  }
+  if (isOpen) {
+    listScrollTop = listPanel.value.scrollTop
+  } else {
+    await nextTick()
+    listPanel.value.scrollTop = listScrollTop
+  }
+})
+
+// Delete from the list: the trash button opens the confirmation dialog
+const router = useRouter()
+const noteToDelete = ref<Note | null>(null)
+const isDeleteDialogOpen = ref(false)
+const isDeleting = ref(false)
+
+function askToDelete(note: Note): void {
+  noteToDelete.value = note
+  isDeleteDialogOpen.value = true
+}
+
+async function handleDelete(): Promise<void> {
+  if (!noteToDelete.value) {
+    return
+  }
+  const { id } = noteToDelete.value
+  isDeleting.value = true
+
+  try {
+    await remove(id)
+    toast.success('Note deleted')
+    // The deleted note was open in the detail panel – close it
+    if (route.name === 'note-edit' && Number(route.params.id) === id) {
+      await router.push({ name: 'home' })
+    }
+  } catch (error) {
+    toast.error('Note could not be deleted.')
+    console.error('Failed to delete note', error)
+  } finally {
+    isDeleting.value = false
+    isDeleteDialogOpen.value = false
+  }
 }
 </script>
 
 <template>
-  <div class="layout">
-    <aside class="panel panel--list">
+  <div class="layout" :class="{ 'layout--detail-open': isDetailOpen }">
+    <aside ref="listPanel" class="panel panel--list">
       <header class="list-header">
         <h1 class="list-header__title">Notes</h1>
-        <BaseButton @click="startCreate">+ New note</BaseButton>
+        <BaseButton :to="{ name: 'note-create' }">+ New note</BaseButton>
       </header>
 
-      <NotePriorityFilter v-model="priorityFilter" class="list-filter" />
+      <NotePriorityFilter v-model="priority" class="list-filter" />
 
-      <NoteList
-        :notes="notes"
-        :selected-id="selectedNoteId"
-        class="list-notes"
-        @select="selectedNoteId = $event"
-      />
+      <div class="list-content">
+        <!-- Skeleton only on the first load; when the filter changes, the current list stays until new data arrive -->
+        <NoteListSkeleton v-if="isLoading && !hasLoaded" />
+        <NoteListError v-else-if="hasError" @retry="load" />
+        <NoteListEmptyFilter
+          v-else-if="notes.length === 0 && priority !== null"
+          :priority="priority"
+          @clear="priority = null"
+        />
+        <NoteListEmpty v-else-if="notes.length === 0" />
+        <NoteList v-else :notes="notes" @delete="askToDelete" />
+      </div>
     </aside>
 
     <main class="panel panel--detail">
-      <NoteEmptyState @create="startCreate" />
+      <!-- key: switching to another note creates a fresh view (new form state) instead of reusing the old one -->
+      <RouterView :key="route.path" />
     </main>
   </div>
+
+  <BaseConfirmDialog
+    v-model:open="isDeleteDialogOpen"
+    title="Delete note?"
+    confirm-label="Delete"
+    danger
+    :is-confirming="isDeleting"
+    @confirm="handleDelete"
+  >
+    “{{ noteToDelete?.title }}” will be permanently deleted.
+  </BaseConfirmDialog>
+
+  <!-- Short confirmations after actions, triggered anywhere via toast.success(...) -->
+  <Toaster position="bottom-right" rich-colors :duration="3000" />
 </template>
 
 <style scoped>
@@ -84,6 +125,8 @@ function startCreate(): void {
   height: 100%;
   display: grid;
   grid-template-columns: 1fr;
+  /* Row fills the viewport height, so the panels scroll inside instead of the whole page */
+  grid-template-rows: minmax(0, 1fr);
 }
 
 .panel {
@@ -91,8 +134,13 @@ function startCreate(): void {
   overflow-y: auto;
 }
 
-.panel--detail {
+.panel--detail,
+.layout--detail-open .panel--list {
   display: none;
+}
+
+.layout--detail-open .panel--detail {
+  display: block;
 }
 
 @media (min-width: 768px) {
@@ -106,7 +154,10 @@ function startCreate(): void {
     border-radius: var(--radius-base);
   }
 
-  .panel--detail {
+  /* Desktop: both panels are always visible */
+  .panel--list,
+  .panel--detail,
+  .layout--detail-open .panel--list {
     display: block;
   }
 }
@@ -128,7 +179,7 @@ function startCreate(): void {
   margin: 0 var(--space-4) var(--space-3);
 }
 
-.list-notes {
+.list-content {
   padding: 0 var(--space-4) var(--space-4);
 }
 </style>

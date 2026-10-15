@@ -4,22 +4,17 @@ import NoteListItem from './NoteListItem.vue'
 
 defineProps<{
   notes: Note[]
-  selectedId: number | null
 }>()
 
 defineEmits<{
-  select: [id: number]
+  delete: [note: Note]
 }>()
 </script>
 
 <template>
   <ul class="note-list">
     <li v-for="note in notes" :key="note.id">
-      <NoteListItem
-        :note="note"
-        :selected="note.id === selectedId"
-        @select="$emit('select', note.id)"
-      />
+      <NoteListItem :note="note" @delete="$emit('delete', note)" />
     </li>
   </ul>
 </template>
