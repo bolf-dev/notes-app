@@ -29,7 +29,7 @@ Jednoduchá aplikácia na správu poznámok – Symfony 7.4 LTS (PHP 8.4), Maria
 
    Databázové migrácie sa spúšťajú automaticky pri každom štarte kontajnera `app`.
 
-3. (Voliteľné) Naplň databázu testovacími dátami (20 poznámok):
+3. (Voliteľné) Naplň databázu ukážkovými dátami (5 poznámok):
    ```bash
    docker compose exec app bin/console doctrine:fixtures:load
    ```
