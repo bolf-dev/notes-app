@@ -130,6 +130,9 @@ watch(fieldErrors, async (errors) => {
       <p v-if="fieldErrors.priority" class="note-form__error">{{ fieldErrors.priority }}</p>
     </fieldset>
 
+    <!-- Optional extra info from the parent, e.g. created/updated dates when editing -->
+    <slot name="meta" />
+
     <p v-if="generalError" class="note-form__general-error" role="alert">{{ generalError }}</p>
 
     <div class="note-form__actions">

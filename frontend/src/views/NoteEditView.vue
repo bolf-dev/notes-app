@@ -70,9 +70,6 @@ function handleSubmit(payload: NotePayload): Promise<void> {
   </div>
 
   <template v-else-if="note">
-    <p class="note-edit-view__dates">
-      Created {{ formatDateTime(note.createdAt) }} · Updated {{ formatDateTime(note.updatedAt) }}
-    </p>
     <NoteForm
       :initial-values="{ title: note.title, content: note.content, priority: note.priority }"
       :errors="errors"
@@ -80,7 +77,14 @@ function handleSubmit(payload: NotePayload): Promise<void> {
       :is-submitting="isSubmitting"
       @submit="handleSubmit"
       @cancel="router.push({ name: 'home' })"
-    />
+    >
+      <template #meta>
+        <p class="note-edit-view__dates">
+          Created {{ formatDateTime(note.createdAt) }} · Updated
+          {{ formatDateTime(note.updatedAt) }}
+        </p>
+      </template>
+    </NoteForm>
   </template>
 </template>
 
@@ -96,7 +100,6 @@ function handleSubmit(payload: NotePayload): Promise<void> {
 }
 
 .note-edit-view__dates {
-  padding: var(--space-4) var(--space-5) 0;
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
 }
