@@ -6,7 +6,7 @@ withDefaults(
   defineProps<{
     to?: RouteLocationRaw
     type?: 'button' | 'submit'
-    variant?: 'primary' | 'secondary'
+    variant?: 'primary' | 'secondary' | 'danger'
   }>(),
   {
     to: undefined,
@@ -58,6 +58,15 @@ withDefaults(
 
 .base-button--secondary:hover {
   border-color: var(--color-border-hover);
+}
+
+.base-button--danger {
+  background: var(--color-error-text);
+  color: var(--color-on-primary);
+}
+
+.base-button--danger:hover {
+  background: var(--color-priority-high-text);
 }
 
 .base-button:disabled {

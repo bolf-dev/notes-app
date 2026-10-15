@@ -5,12 +5,16 @@ import NoteListItem from './NoteListItem.vue'
 defineProps<{
   notes: Note[]
 }>()
+
+defineEmits<{
+  delete: [note: Note]
+}>()
 </script>
 
 <template>
   <ul class="note-list">
     <li v-for="note in notes" :key="note.id">
-      <NoteListItem :note="note" />
+      <NoteListItem :note="note" @delete="$emit('delete', note)" />
     </li>
   </ul>
 </template>

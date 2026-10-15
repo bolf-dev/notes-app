@@ -1,6 +1,6 @@
 import { ref, watch } from 'vue'
 
-import { fetchNotes } from '@/api/notes'
+import { deleteNote, fetchNotes } from '@/api/notes'
 import type { Note, Priority } from '@/types/note'
 
 // State lives outside the function, so every component calling useNotes() shares the same list
@@ -38,8 +38,13 @@ async function load(): Promise<void> {
   }
 }
 
+async function remove(id: number): Promise<void> {
+  await deleteNote(id)
+  load()
+}
+
 watch(priority, load)
 
 export function useNotes() {
-  return { notes, priority, isLoading, hasLoaded, hasError, load }
+  return { notes, priority, isLoading, hasLoaded, hasError, load, remove }
 }

@@ -32,3 +32,7 @@ export async function updateNote(id: number, payload: NotePayload): Promise<Note
 
   return response.data
 }
+
+export async function deleteNote(id: number): Promise<void> {
+  await apiClient.delete(`/notes/${id}`)
+}

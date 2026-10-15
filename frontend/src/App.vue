@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed, nextTick, useTemplateRef, watch } from 'vue'
-import { RouterView, useRoute } from 'vue-router'
-import { Toaster } from 'vue-sonner'
+import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
+import { RouterView, useRoute, useRouter } from 'vue-router'
+import { Toaster, toast } from 'vue-sonner'
 
 import BaseButton from '@/components/base/BaseButton.vue'
+import BaseConfirmDialog from '@/components/base/BaseConfirmDialog.vue'
 import NoteList from '@/components/notes/NoteList.vue'
 import NoteListEmpty from '@/components/notes/NoteListEmpty.vue'
 import NoteListEmptyFilter from '@/components/notes/NoteListEmptyFilter.vue'
@@ -11,8 +12,9 @@ import NoteListError from '@/components/notes/NoteListError.vue'
 import NoteListSkeleton from '@/components/notes/NoteListSkeleton.vue'
 import NotePriorityFilter from '@/components/notes/NotePriorityFilter.vue'
 import { useNotes } from '@/composables/useNotes'
+import type { Note } from '@/types/note'
 
-const { notes, priority, isLoading, hasLoaded, hasError, load } = useNotes()
+const { notes, priority, isLoading, hasLoaded, hasError, load, remove } = useNotes()
 
 // Start loading right away (not in onMounted), so the first render already shows the loading state
 load()
@@ -36,6 +38,40 @@ watch(isDetailOpen, async (isOpen) => {
     listPanel.value.scrollTop = listScrollTop
   }
 })
+
+// Delete from the list: the trash button opens the confirmation dialog
+const router = useRouter()
+const noteToDelete = ref<Note | null>(null)
+const isDeleteDialogOpen = ref(false)
+const isDeleting = ref(false)
+
+function askToDelete(note: Note): void {
+  noteToDelete.value = note
+  isDeleteDialogOpen.value = true
+}
+
+async function handleDelete(): Promise<void> {
+  if (!noteToDelete.value) {
+    return
+  }
+  const { id } = noteToDelete.value
+  isDeleting.value = true
+
+  try {
+    await remove(id)
+    toast.success('Note deleted')
+    // The deleted note was open in the detail panel – close it
+    if (route.name === 'note-edit' && Number(route.params.id) === id) {
+      await router.push({ name: 'home' })
+    }
+  } catch (error) {
+    toast.error('Note could not be deleted.')
+    console.error('Failed to delete note', error)
+  } finally {
+    isDeleting.value = false
+    isDeleteDialogOpen.value = false
+  }
+}
 </script>
 
 <template>
@@ -58,7 +94,7 @@ watch(isDetailOpen, async (isOpen) => {
           @clear="priority = null"
         />
         <NoteListEmpty v-else-if="notes.length === 0" />
-        <NoteList v-else :notes="notes" />
+        <NoteList v-else :notes="notes" @delete="askToDelete" />
       </div>
     </aside>
 
@@ -67,6 +103,17 @@ watch(isDetailOpen, async (isOpen) => {
       <RouterView :key="route.path" />
     </main>
   </div>
+
+  <BaseConfirmDialog
+    v-model:open="isDeleteDialogOpen"
+    title="Delete note?"
+    confirm-label="Delete"
+    danger
+    :is-confirming="isDeleting"
+    @confirm="handleDelete"
+  >
+    “{{ noteToDelete?.title }}” will be permanently deleted.
+  </BaseConfirmDialog>
 
   <!-- Short confirmations after actions, triggered anywhere via toast.success(...) -->
   <Toaster position="bottom-right" rich-colors :duration="3000" />
