@@ -4,46 +4,17 @@ import { ref } from 'vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import NoteEmptyState from '@/components/notes/NoteEmptyState.vue'
 import NoteList from '@/components/notes/NoteList.vue'
+import NoteListEmpty from '@/components/notes/NoteListEmpty.vue'
+import NoteListError from '@/components/notes/NoteListError.vue'
+import NoteListSkeleton from '@/components/notes/NoteListSkeleton.vue'
 import NotePriorityFilter from '@/components/notes/NotePriorityFilter.vue'
-import type { Note, Priority } from '@/types/note'
+import { useNotes } from '@/composables/useNotes'
+import type { Priority } from '@/types/note'
 
-// Static placeholder data – replaced by API data in step 2
-const notes: Note[] = [
-  {
-    id: 4,
-    title: 'Call patient about elevated potassium',
-    content:
-      'Lab result from this morning: K+ 6.1 mmol/l. Call the patient today, arrange a repeat test tomorrow at 7:30 and review the ACE inhibitor dose.',
-    priority: 'high',
-    createdAt: '2026-10-14T15:42:00+02:00',
-    updatedAt: '2026-10-14T15:42:00+02:00',
-  },
-  {
-    id: 3,
-    title: 'Reply to online consultations',
-    content:
-      'Three unanswered patient questions in the online consultation inbox – rash after antibiotics, sick leave extension, vaccination schedule. Reply by end of day.',
-    priority: 'medium',
-    createdAt: '2026-10-13T08:05:00+02:00',
-    updatedAt: '2026-10-13T09:10:00+02:00',
-  },
-  {
-    id: 2,
-    title: 'Renew chronic prescriptions before holidays',
-    content: 'Check e-prescriptions for diabetic patients that expire in December.',
-    priority: 'medium',
-    createdAt: '2026-10-12T11:20:00+02:00',
-    updatedAt: '2026-10-12T11:20:00+02:00',
-  },
-  {
-    id: 1,
-    title: 'Update office hours in the online booking profile',
-    content: 'Add the new Friday afternoon slots for online booking.',
-    priority: 'low',
-    createdAt: '2026-10-10T18:03:00+02:00',
-    updatedAt: '2026-10-10T18:03:00+02:00',
-  },
-]
+const { notes, isLoading, hasError, load } = useNotes()
+
+// Start loading right away (not in onMounted), so the first render already shows the loading state
+load()
 
 const priorityFilter = ref<Priority | null>(null)
 const selectedNoteId = ref<number | null>(null)
@@ -64,12 +35,17 @@ function startCreate(): void {
 
       <NotePriorityFilter v-model="priorityFilter" class="list-filter" />
 
-      <NoteList
-        :notes="notes"
-        :selected-id="selectedNoteId"
-        class="list-notes"
-        @select="selectedNoteId = $event"
-      />
+      <div class="list-content">
+        <NoteListSkeleton v-if="isLoading" />
+        <NoteListError v-else-if="hasError" @retry="load" />
+        <NoteListEmpty v-else-if="notes.length === 0" @create="startCreate" />
+        <NoteList
+          v-else
+          :notes="notes"
+          :selected-id="selectedNoteId"
+          @select="selectedNoteId = $event"
+        />
+      </div>
     </aside>
 
     <main class="panel panel--detail">
@@ -128,7 +104,7 @@ function startCreate(): void {
   margin: 0 var(--space-4) var(--space-3);
 }
 
-.list-notes {
+.list-content {
   padding: 0 var(--space-4) var(--space-4);
 }
 </style>
